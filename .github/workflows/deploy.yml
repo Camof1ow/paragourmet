@@ -1,30 +1,44 @@
-# .github/workflows/deploy.yml
-
 name: Deploy to Server (Self-Hosted)
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted # Use self-hosted runner
+    runs-on: self-hosted
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Create .env file on runner
-      run: |
-        echo "${{ secrets.APP_ENV_VARS }}" > .env
+      - name: Create .env file on runner
+        run: |
+          # secrets.APP_ENV_VARS의 개행/특수문자 보존
+          printf "%s" "${{ secrets.APP_ENV_VARS }}" > .env
+          ls -l .env && echo "::group::.env head" && head -n 5 .env || true && echo "::endgroup::"
 
-    - name: Build and run Docker Compose
-      run: |
-        docker compose build
-        docker compose up -d --remove-orphans
-        docker compose exec web python manage.py migrate --noinput
-        docker compose exec web python manage.py collectstatic --noinput
+      - name: Validate Compose config
+        run: docker compose config
+
+      - name: Build images
+        run: docker compose build
+
+      # DB가 PostgreSQL 등 외부가 아니라 SQLite라면 서비스 안 띄우고 run으로 선실행 가능
+      - name: Django migrate (one-off)
+        run: docker compose run --rm web python manage.py migrate --noinput
+
+      - name: Django collectstatic (one-off)
+        run: docker compose run --rm web python manage.py collectstatic --noinput
+
+      - name: Up services
+        run: docker compose up -d --remove-orphans --wait
+
+      # 선택: 간단 헬스 체크
+      - name: Smoke test
+        run: |
+          sleep 3
+          curl -fsS http://localhost:8000/ || (docker compose logs --no-color web && exit 1)
