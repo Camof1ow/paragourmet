@@ -25,7 +25,7 @@ jobs:
         run: docker compose config
 
       - name: Build images
-        run: docker compose build
+        run: docker compose build --no-cache
 
       # DB가 PostgreSQL 등 외부가 아니라 SQLite라면 서비스 안 띄우고 run으로 선실행 가능
       - name: Django migrate (one-off)
