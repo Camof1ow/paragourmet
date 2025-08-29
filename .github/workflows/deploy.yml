@@ -7,6 +7,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: self-hosted
+    timeout-minutes: 30
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
 
     steps:
       - name: Checkout code
@@ -17,17 +21,19 @@ jobs:
 
       - name: Create .env file on runner
         run: |
-          # secrets.APP_ENV_VARS의 개행/특수문자 보존
           printf "%s" "${{ secrets.APP_ENV_VARS }}" > .env
-          ls -l .env && echo "::group::.env head" && head -n 5 .env || true && echo "::endgroup::"
+          ls -l .env
+          head -n 5 .env || true
 
       - name: Validate Compose config
         run: docker compose config
 
       - name: Build images
-        run: docker compose build --no-cache
+        run: docker compose build --progress=plain
 
-      # DB가 PostgreSQL 등 외부가 아니라 SQLite라면 서비스 안 띄우고 run으로 선실행 가능
+      - name: Verify gunicorn installed
+        run: docker compose run --rm web python -m gunicorn --version
+
       - name: Django migrate (one-off)
         run: docker compose run --rm web python manage.py migrate --noinput
 
@@ -37,7 +43,6 @@ jobs:
       - name: Up services
         run: docker compose up -d --remove-orphans --wait
 
-      # 선택: 간단 헬스 체크
       - name: Smoke test
         run: |
           sleep 3
