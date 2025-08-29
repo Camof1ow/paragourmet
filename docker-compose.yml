@@ -1,18 +1,15 @@
 services:
   web:
     build: .
-    container_name: paragourmet_web
-    # PATH 이슈 회피를 원하면 아래처럼:
     command: python -m gunicorn paragourmet.wsgi:application --bind 0.0.0.0:8000
-    ports:
-      - "8000:8000"
     env_file:
       - ./.env
+    environment:
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,141.147.147.76"
+      CSRF_TRUSTED_ORIGINS: "http://141.147.147.76"
+    ports:
+      - "8000:8000"
     volumes:
       - .:/app
       - db_data:/app/db_data
       - static_volume:/app/staticfiles
-
-volumes:
-  db_data:
-  static_volume:
