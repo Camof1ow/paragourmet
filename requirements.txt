@@ -1,0 +1,10 @@
+# For Python 3.10+, use Django>=5.0,<6.0
+# For Python 3.8/3.9, use Django>=4.2,<5.0
+Django>=4.2,<5.0
+requests>=2.30.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0>
+pytz>=2024.1
+timezonefinder>=6.2.0
+numpy>=1.22.0
+openai>=1.0.0
+google-api-python-client>=2.0.0
