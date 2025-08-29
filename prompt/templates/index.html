@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title"></title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #2c2c2c;
+            color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #3c3c3c;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #e0e0e0;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .info-display {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #4a4a4a;
+        }
+        .info-display p {
+            margin: 5px 0;
+            color: #d0d0d0;
+        }
+        .info-display strong {
+            color: #d0d0d0;
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #004085;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #555;
+        }
+        .result-section h2 {
+            color: #e0e0e0;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .card-item {
+            background-color: #4a4a4a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .card-item p {
+            margin: 0 0 5px 0;
+            color: #f5f5f5;
+        }
+        .card-item p:last-child {
+            margin-bottom: 0;
+        }
+        .result-image {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .loading-message {
+            text-align: center;
+            color: #b0b0b0;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            button {
+                font-size: 16px;
+            }
+        }
+
+        /* Language Tabs */
+        .lang-tabs {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .lang-tabs button {
+            width: auto;
+            padding: 8px 15px;
+            margin: 0 5px;
+            background-color: #6c757d;
+            font-size: 14px;
+            border: none; /* Ensure no default button border */
+            border-radius: 5px; /* Match other buttons */
+            color: white; /* Ensure text color is white */
+        }
+        .lang-tabs button.active {
+            background-color: #007bff;
+        }
+
+        /* Dark Theme */
+        body.dark-theme {
+            background-color: #2c2c2c;
+            color: #f5f5f5;
+        }
+        body.dark-theme .container {
+            background-color: #3c3c3c;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        body.dark-theme h1,
+        body.dark-theme .result-section h2 {
+            color: #e0e0e0;
+        }
+        body.dark-theme .info-display {
+            background-color: #4a4a4a;
+            border-color: #555;
+        }
+        body.dark-theme .info-display p,
+        body.dark-theme .info-display strong {
+            color: #d0d0d0;
+        }
+        body.dark-theme button {
+            background-color: #0056b3;
+        }
+        body.dark-theme button:hover {
+            background-color: #004085;
+        }
+        body.dark-theme .result-item strong {
+            color: #87ceeb;
+        }
+        body.dark-theme .loading-message,
+        body.dark-theme .error-message {
+            color: #b0b0b0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lang-tabs">
+            <button id="langKo" onclick="changeLanguage('ko')">한국어</button>
+            <button id="langEn" onclick="changeLanguage('en')">English</button>
+        </div>
+        <h1 data-i18n="main_title"></h1>
+        <div class="info-display">
+            <p><strong data-i18n="detected_location_label"></strong> <span id="detectedLocation"></span></p>
+            <p><strong data-i18n="detected_weather_label"></strong> <span id="detectedWeather"></span></p>
+        </div>
+        <button id="getSuggestionBtn" onclick="getSuggestion()" data-i18n="get_suggestion_button" disabled></button>
+
+        <div id="loading" class="loading-message" style="display: none;" data-i18n="loading_message"></div>
+        <div id="error" class="error-message" style="display: none;"></div>
+
+        <div id="result" class="result-section" style="display: none;">
+            <h2 data-i18n="recommended_menu_title"></h2>
+            <div class="card-item">
+                <p><span id="suggestion"></span></p>
+                <p><span id="reason"></span></p>
+            </div>
+            <img id="foodImage" class="result-image" src="" alt="" style="display: none;">
+        </div>
+    </div>
+
+    <script>
+        // Mapping for Open-Meteo weather codes to descriptions
+        const WEATHER_CODES = {
+            0: "맑음", // Clear sky
+            1: "대체로 맑음", // Mainly clear
+            2: "부분적으로 흐림", // Partly cloudy
+            3: "흐림", // Overcast
+            45: "안개", // Fog
+            48: "성애 안개", // Depositing rime fog
+            51: "이슬비 (약함)", // Drizzle: Light
+            53: "이슬비 (보통)", // Drizzle: Moderate
+            55: "이슬비 (강함)", // Drizzle: Dense intensity
+            56: "어는 이슬비 (약함)", // Freezing Drizzle: Light
+            57: "어는 이슬비 (강함)", // Freezing Drizzle: Dense intensity
+            61: "비 (약함)", // Rain: Light
+            63: "비 (보통)", // Rain: Moderate
+            65: "비 (강함)", // Rain: Heavy intensity
+            66: "어는 비 (약함)", // Freezing Rain: Light
+            67: "어는 비 (강함)", // Freezing Rain: Heavy intensity
+            71: "눈 (약함)", // Snow fall: Light
+            73: "눈 (보통)", // Snow fall: Moderate
+            75: "눈 (강함)", // Snow fall: Heavy intensity
+            77: "눈송이", // Snow grains
+            80: "소나기 (약함)", // Rain showers: Light
+            81: "소나기 (보통)", // Rain showers: Moderate
+            82: "소나기 (강함)", // Rain showers: Violent
+            85: "눈 소나기 (약함)", // Snow showers: Light
+            86: "눈 소나기 (강함)", // Snow showers: Heavy
+            95: "뇌우 (약함/보통)", // Thunderstorm: Light or moderate
+            96: "뇌우 (우박 동반, 약함)", // Thunderstorm with slight hail
+            99: "뇌우 (우박 동반, 강함)" // Thunderstorm with heavy hail
+        };
+
+        function getWeatherDescription(code) {
+            return WEATHER_CODES[code] || "알 수 없음";
+        }
+
+        let detectedLat, detectedLon, detectedCity, detectedDistrict, detectedTempC, detectedSky, detectedHumidity;
+        let isFirstRequest = true; // Track if it's the first request for the current context
+        let lastDetectedLocation = ''; // To reset isFirstRequest if location changes
+
+        // Translations object
+        const translations = {
+            ko: {
+                title: "ParaGourmet AI 추천",
+                main_title: "AI 메뉴 추천",
+                detected_location_label: "감지된 위치:",
+                detected_weather_label: "감지된 날씨:",
+                get_suggestion_button: "메뉴 추천 받기",
+                loading_message: "위치 및 날씨 정보 감지 중...",
+                recommended_menu_title: "추천 메뉴",
+                menu_label: "메뉴:", // Removed from display
+                reason_label: "이유:", // Removed from display
+                location_weather_error: "위치/날씨 감지 오류:",
+                api_error: "API 오류:",
+                suggestion_error: "추천 오류:",
+                all_info_needed: "위치 및 날씨 정보가 아직 감지되지 않았습니다. 잠시 후 다시 시도해 주세요.",
+                humidity_label: "습도"
+            },
+            en: {
+                title: "ParaGourmet AI Suggestion",
+                main_title: "AI Menu Suggestion",
+                detected_location_label: "Detected Location:",
+                detected_weather_label: "Detected Weather:",
+                get_suggestion_button: "Get Menu Suggestion",
+                loading_message: "Detecting location and weather...",
+                recommended_menu_title: "Recommended Menu",
+                menu_label: "Menu:", // Removed from display
+                reason_label: "Reason:", // Removed from display
+                location_weather_error: "Location/Weather detection error:",
+                api_error: "API error:",
+                suggestion_error: "Suggestion error:",
+                all_info_needed: "Location and weather information not yet detected. Please try again shortly.",
+                humidity_label: "Humidity"
+            }
+        };
+
+        let currentLang = '{{ lang }}'; // Initial language from Django context
+
+        function updateUI(lang) {
+            currentLang = lang;
+            // Update URL without reloading
+            window.history.pushState({}, '', `/${lang}/`);
+
+            // Update active button
+            document.getElementById('langKo').classList.remove('active');
+            document.getElementById('langEn').classList.remove('active');
+            document.getElementById(`lang${lang.charAt(0).toUpperCase() + lang.slice(1)}`).classList.add('active');
+
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+
+            // Update specific elements that are not data-i18n
+            document.querySelector('title').textContent = translations[lang].title;
+            document.getElementById('foodImage').alt = translations[lang].recommended_menu_title; // Alt text for image
+
+            // Re-display detected info with new labels
+            if (detectedLat) {
+                document.getElementById('detectedLocation').textContent = `${detectedDistrict}, ${detectedCity} (Lat: ${detectedLat.toFixed(4)}, Lon: ${detectedLon.toFixed(4)})`;
+                document.getElementById('detectedWeather').textContent = `${detectedTempC}°C, ${getWeatherDescription(weatherData.current_weather.weathercode)}, ${translations[currentLang].humidity_label}: ${detectedHumidity}`; 
+            }
+
+            // Update error messages if visible
+            const errorDiv = document.getElementById('error');
+            if (errorDiv.style.display !== 'none') {
+                const originalErrorText = errorDiv.textContent.split(':').slice(1).join(':').trim();
+                if (originalErrorText) {
+                    const errorKey = Object.keys(translations[currentLang]).find(key => translations[currentLang][key].includes(errorDiv.textContent.split(':')[0].trim()));
+                    if (errorKey) {
+                        errorDiv.textContent = `${translations[currentLang][errorKey]}: ${originalErrorText}`;
+                    }
+                }
+            }
+        }
+
+        function changeLanguage(lang) {
+            updateUI(lang);
+            // Re-run detection to update weather description if needed (e.g. if language changes after detection)
+            // detectLocationAndWeather(); // Optional: might cause rate limit issues if called too often
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI(currentLang);
+            detectLocationAndWeather();
+        });
+
+        async function detectLocationAndWeather() {
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const getSuggestionBtn = document.getElementById('getSuggestionBtn');
+            getSuggestionBtn.disabled = true; // Disable button initially
+
+            loadingDiv.textContent = translations[currentLang].loading_message;
+            loadingDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            isFirstRequest = true; // Reset for new location/weather detection
+            lastDetectedLocation = ''; // Clear last detected location
+
+            try {
+                // 1. Get Geolocation
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                });
+                detectedLat = position.coords.latitude;
+                detectedLon = position.coords.longitude;
+
+                // 2. Reverse Geocoding using Nominatim
+                const nominatimResponse = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${detectedLat}&lon=${detectedLon}`);
+                if (!nominatimResponse.ok) {
+                    throw new Error(`Nominatim API error: ${nominatimResponse.statusText}`);
+                }
+                const nominatimData = await nominatimResponse.json();
+                
+                // Extract city and district (simplified logic, might need refinement for specific regions)
+                detectedCity = nominatimData.address.city || nominatimData.address.town || nominatimData.address.village || nominatimData.address.county || nominatimData.address.state;
+                detectedDistrict = nominatimData.address.suburb || nominatimData.address.neighbourhood || nominatimData.address.road || nominatimData.address.hamlet || detectedCity;
+
+                // 3. Get Weather from Open-Meteo
+                const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${detectedLat}&longitude=${detectedLon}&current_weather=true&temperature_unit=celsius&wind_speed_unit=ms&precipitation_unit=mm&hourly=relative_humidity_2m`);
+                if (!weatherResponse.ok) {
+                    throw new Error(`Weather API error: ${weatherResponse.statusText}`);
+                }
+                const weatherData = await weatherResponse.json();
+
+                detectedTempC = weatherData.current_weather.temperature.toFixed(1);
+                detectedSky = getWeatherDescription(weatherData.current_weather.weathercode);
+                
+                // Get current hour's humidity
+                const now = new Date();
+                const currentHour = now.getHours();
+                const humidityIndex = weatherData.hourly.time.findIndex(timeStr => new Date(timeStr).getHours() === currentHour);
+                if (humidityIndex !== -1 && weatherData.hourly.relative_humidity_2m) {
+                    detectedHumidity = weatherData.hourly.relative_humidity_2m[humidityIndex];
+                } else {
+                    detectedHumidity = 'N/A';
+                }
+
+                // Update display
+                document.getElementById('detectedLocation').textContent = `${detectedDistrict}, ${detectedCity} (Lat: ${detectedLat.toFixed(4)}, Lon: ${detectedLon.toFixed(4)})`;
+                document.getElementById('detectedWeather').textContent = `${detectedTempC}°C, ${detectedSky}, ${translations[currentLang].humidity_label}: ${detectedHumidity}`; 
+                lastDetectedLocation = `${detectedLat.toFixed(4)},${detectedLon.toFixed(4)}`;
+
+                getSuggestionBtn.disabled = false; // Enable button on success
+
+            } catch (err) {
+                console.error('Error detecting location or weather:', err);
+                errorDiv.textContent = `${translations[currentLang].location_weather_error}: ${err.message || err}`; 
+                errorDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        async function getSuggestion() {
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+
+            resultDiv.style.display = 'none';
+            loadingDiv.textContent = translations[currentLang].loading_message;
+            loadingDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+            // Use detected values
+            if (!detectedLat || !detectedLon || !detectedCity || !detectedDistrict || !detectedTempC || !detectedSky || !detectedHumidity) {
+                errorDiv.textContent = translations[currentLang].all_info_needed;
+                errorDiv.style.display = 'block';
+                loadingDiv.style.display = 'none';
+                return;
+            }
+
+            const params = new URLSearchParams({
+                lat: detectedLat,
+                lon: detectedLon,
+                city: detectedCity,
+                district: detectedDistrict,
+                temp_c: detectedTempC,
+                sky: detectedSky,
+                humidity: detectedHumidity,
+                lang: currentLang // Pass language from current UI setting
+            });
+
+            // Add diversity_mode parameter if it's not the first request for this context
+            if (!isFirstRequest) {
+                params.append('diversity_mode', 'true');
+            }
+            isFirstRequest = false; // Set to false after the first request
+
+            try {
+                const response = await fetch(`/api/suggestion?${params.toString()}`);
+                if (!response.ok) {
+                    throw new Error(`${translations[currentLang].api_error}: ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                document.getElementById('suggestion').textContent = `${data.suggestion}`;
+                document.getElementById('reason').textContent = `${data.reason}`;
+                
+                const foodImage = document.getElementById('foodImage');
+                if (data.image_url && data.image_url !== "No image found") {
+                    foodImage.src = data.image_url;
+                    foodImage.style.display = 'block';
+                } else {
+                    foodImage.style.display = 'none';
+                }
+
+                resultDiv.style.display = 'block';
+
+            } catch (err) {
+                console.error('Error getting suggestion:', err);
+                errorDiv.textContent = `${translations[currentLang].suggestion_error}: ${err.message || err}`; 
+                errorDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

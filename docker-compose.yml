@@ -1,0 +1,23 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: paragourmet_web
+    command: gunicorn paragourmet.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - db_data:/app/db_data # Volume for SQLite database persistence
+      - static_volume:/app/staticfiles # Volume for static files
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      - # Add database service here if using external DB (e.g., postgres)
+
+volumes:
+  db_data:
+  static_volume:
