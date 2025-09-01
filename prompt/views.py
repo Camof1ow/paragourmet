@@ -3,6 +3,8 @@
 import logging
 from django.http import JsonResponse, HttpRequest, HttpResponseBadRequest
 from django.shortcuts import render
+from django_ratelimit.decorators import ratelimit
+from django_ratelimit.exceptions import Ratelimited
 from .services.prompt_overpass_minimal import generate_prompt, SceneInput
 from .services.suggestion_service import get_ai_suggestion, get_image_url
 import os # Added for os.getenv in index_view
@@ -15,6 +17,7 @@ def health_check_view(request: HttpRequest) -> JsonResponse:
     """
     return JsonResponse({"ok": True})
 
+@ratelimit(key='ip', rate='30/m', method='GET')
 def prompt_view(request: HttpRequest) -> JsonResponse:
     """
     Generates a Paragraphica-style prompt based on query parameters.
@@ -47,6 +50,7 @@ def prompt_view(request: HttpRequest) -> JsonResponse:
         logger.error(f"Internal server error in prompt_view: {e}", exc_info=True)
         return JsonResponse({'error': 'An internal server error occurred.'}, status=500)
 
+@ratelimit(key='ip', rate='10/m', method='GET')
 def suggestion_view(request: HttpRequest) -> JsonResponse:
     """
     Full-cycle endpoint that generates a prompt, gets an AI suggestion,

@@ -2,7 +2,7 @@ name: Deploy to Server (Self-Hosted)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build-and-deploy:
@@ -45,5 +45,11 @@ jobs:
 
       - name: Smoke test
         run: |
-          sleep 3
-          curl -fsS http://localhost:8000/ || (docker compose logs --no-color web && exit 1)
+          sleep 10
+          echo "Testing health endpoint..."
+          curl -fsS http://localhost:8000/health || (
+            echo "Health check failed, checking logs and container status..."
+            docker compose logs --no-color web
+            docker compose ps
+            exit 1
+          )

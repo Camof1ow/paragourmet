@@ -2,8 +2,9 @@
 
 import requests
 import logging
+import time
 from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from datetime import datetime
 import pytz
 from timezonefinder import TimezoneFinder
@@ -63,7 +64,7 @@ class SceneInput:
             self.local_dt = datetime.now(timezone)
 
 
-def fetch_pois_overpass(lat: float, lon: float, radius_m: int) -> Dict[str, int]:
+def fetch_pois_overpass(lat: float, lon: float, radius_m: int, max_retries: int = 3) -> Dict[str, int]:
     """
     Fetch and count POIs via Overpass. Uses one request with multiple 'out count' statements.
     WARNING: Overpass 'out count' returns a list of count elements in the same order as queries.
@@ -73,28 +74,40 @@ def fetch_pois_overpass(lat: float, lon: float, radius_m: int) -> Dict[str, int]
     parts = [f'({tags}(around:{radius_m},{lat},{lon});); out count;' for tags in POI_TAGS.values()]
     query = "[out:json][timeout:25];" + "".join(parts)
 
-    counts_in_order: List[int] = []
     poi_counts: Dict[str, int] = {key: 0 for key in POI_TAGS.keys()}
 
-    try:
-        r = requests.post(OVERPASS_URL, data={"data": query}, timeout=25)
-        r.raise_for_status()
-        data = r.json()
-        # Each 'out count;' produces an element like:
-        # {"type":"count","id":...,"tags":{"nodes":"x","ways":"y","relations":"z","total":"n"}}
-        for el in data.get("elements", []):
-            if el.get("type") == "count":
-                total = int(el.get("tags", {}).get("total", 0))
-                counts_in_order.append(total)
+    for attempt in range(max_retries):
+        try:
+            r = requests.post(OVERPASS_URL, data={"data": query}, timeout=30)
+            r.raise_for_status()
+            data = r.json()
+            
+            counts_in_order: List[int] = []
+            # Each 'out count;' produces an element like:
+            # {"type":"count","id":...,"tags":{"nodes":"x","ways":"y","relations":"z","total":"n"}}
+            for el in data.get("elements", []):
+                if el.get("type") == "count":
+                    total = int(el.get("tags", {}).get("total", 0))
+                    counts_in_order.append(total)
 
-        # Map back to our keys by order
-        for (key, _), total in zip(POI_TAGS.items(), counts_in_order):
-            poi_counts[key] = total
+            # Map back to our keys by order
+            for (key, _), total in zip(POI_TAGS.items(), counts_in_order):
+                poi_counts[key] = total
+            
+            break  # Success, exit retry loop
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Overpass API request failed: {e}")
-    except Exception as e:
-        logger.error(f"Overpass parsing error: {e}")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Overpass API request failed (attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(2 ** attempt)  # Exponential backoff
+                continue
+            logger.error(f"Overpass API failed after {max_retries} attempts")
+        except (ValueError, KeyError) as e:
+            logger.error(f"Overpass parsing error: {e}")
+            break  # Don't retry parsing errors
+        except Exception as e:
+            logger.error(f"Unexpected error with Overpass API: {e}")
+            break
 
     # Keep only positive counts
     return {k: v for k, v in poi_counts.items() if v > 0}
