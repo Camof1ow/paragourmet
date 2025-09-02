@@ -1,0 +1,7 @@
+2025-09-01 14:46:06 prompt.services.prompt_overpass_minimal ERROR Unexpected error with Overpass API: Network error
+2025-09-01 14:46:06 prompt.services.suggestion_service ERROR Google service or SEARCH_ENGINE_ID not available.
+2025-09-01 15:04:52 prompt.services.suggestion_service ERROR Google Image Search failed after 3 attempts
+2025-09-01 15:07:44 prompt.services.suggestion_service ERROR Google Image Search failed after 3 attempts
+2025-09-01 15:07:58 prompt.services.suggestion_service ERROR Google Image Search failed after 3 attempts
+2025-09-01 15:08:11 prompt.services.suggestion_service ERROR Google Image Search failed after 3 attempts
+2025-09-01 15:08:25 prompt.services.suggestion_service ERROR Google Image Search failed after 3 attempts
