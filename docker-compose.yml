@@ -1,8 +1,9 @@
+version: "3.8"
 services:
   web:
-    build: .
+    image: foodgraphica:latest
     container_name: paragourmet_web
-    command: python -m gunicorn paragourmet.wsgi:application --bind 0.0.0.0:8000
+    restart: unless-stopped
     ports:
       - "8000:8000"
     env_file:
@@ -11,11 +12,19 @@ services:
       DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,141.147.147.76"
       CSRF_TRUSTED_ORIGINS: "http://141.147.147.76"
     volumes:
-      - .:/app
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
       - db_data:/app/db_data
       - static_volume:/app/staticfiles
-
+      - media_volume:/app/media
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8000/ >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   db_data: {}
   static_volume: {}
+  media_volume: {}
