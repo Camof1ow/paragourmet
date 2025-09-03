@@ -88,11 +88,11 @@ jobs:
 
       - name: Stop existing container
         run: |
-          docker-compose down || true
+          docker compose down || true
 
       - name: Start new container
         run: |
-          docker-compose up -d
+          docker compose up -d
 
       - name: Health check
         run: |
