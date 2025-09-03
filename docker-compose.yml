@@ -1,5 +1,20 @@
 version: "3.8"
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: paragourmet_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - static_volume:/var/www/html/staticfiles
+      - media_volume:/var/www/html/media
+    depends_on:
+      - web
+
   web:
     image: foodgraphica:latest
     container_name: paragourmet_web
@@ -10,7 +25,8 @@ services:
       - ./.env
     environment:
       DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,141.147.147.76"
-      CSRF_TRUSTED_ORIGINS: "http://141.147.147.76"
+      CSRF_TRUSTED_ORIGINS: "https://141.147.147.76,http://localhost:8000"
+      USE_HTTPS: "true"
     volumes:
       - ./logs:/app/logs
       - ./.env:/app/.env:ro
