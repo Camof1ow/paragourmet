@@ -31,7 +31,7 @@ services:
       BEHIND_PROXY: "1"
     volumes:
       - ./logs:/app/logs
-      - ./.env:/app/.env:ro
+      - ../.env:/app/.env:ro
       - db_data:/app/db_data
       - static_volume:/app/staticfiles
       - media_volume:/app/media
