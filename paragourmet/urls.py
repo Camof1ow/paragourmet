@@ -12,7 +12,8 @@ urlpatterns = [
     path('health', health_check_view, name='health_check'),
     path('api/prompt', prompt_view, name='prompt_api'),
     path('api/suggestion', suggestion_view, name='suggestion_api'),
-    path('kr/', index_view, {'lang': 'ko'}, name='index_ko'),
+    path('ko/', index_view, {'lang': 'ko'}, name='index_ko'),
+    path('kr/', index_view, {'lang': 'ko'}, name='index_kr'),  # Alias for ko
     path('en/', index_view, {'lang': 'en'}, name='index_en'),
     path('', index_view, {'lang': 'ko'}, name='index'), # Default to Korean
 ]
