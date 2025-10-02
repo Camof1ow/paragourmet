@@ -22,13 +22,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./.env
-    environment:
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,141.147.147.76,foodgraphica.duckdns.org"
-      CSRF_TRUSTED_ORIGINS: "https://foodgraphica.duckdns.org,https://141.147.147.76,http://localhost:8000"
-      USE_HTTPS: "true"
-      DEBUG: "False"
-      BEHIND_PROXY: "1"
+      - ../.env
     volumes:
       - ./logs:/app/logs
       - ../.env:/app/.env:ro
