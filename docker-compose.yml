@@ -24,8 +24,8 @@ services:
     env_file:
       - ./.env
     environment:
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,141.147.147.76"
-      CSRF_TRUSTED_ORIGINS: "https://141.147.147.76,http://localhost:8000"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,141.147.147.76,foodgrphica.duckdns.org"
+      CSRF_TRUSTED_ORIGINS: "https://foodgrphica.duckdns.org,https://141.147.147.76,http://localhost:8000"
       USE_HTTPS: "true"
     volumes:
       - ./logs:/app/logs
